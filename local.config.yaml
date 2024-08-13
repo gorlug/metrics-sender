@@ -1,2 +1,3 @@
 url: http://localhost:8080/metric
 journalLogMetaFile: /tmp/journalLogMetaFile.log
+journalUrl: http://localhost:8080/journal

@@ -11,3 +11,8 @@ func GetJournalLogMetaFile() string {
 	metaFile := viper.Get("journalLogMetaFile")
 	return metaFile.(string)
 }
+
+func GetJournalUrl() string {
+	url := viper.Get("journalUrl")
+	return url.(string)
+}

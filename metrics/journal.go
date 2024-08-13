@@ -1,14 +1,18 @@
 package metrics
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
+	"metrics-backend/rest"
+	"net/http"
 	"os"
 	"os/exec"
 	"time"
 )
 
-func SendJournalLogs(metaInfoPath string) {
+func SendJournalLogs(metaInfoPath string, url string) {
 	previousEndTime := time.Time{}
 	metaInfo, err := os.ReadFile(metaInfoPath)
 	if err == nil {
@@ -17,10 +21,12 @@ func SendJournalLogs(metaInfoPath string) {
 		previousEndTime = parsedTime
 	}
 	collectJournalStruct := &CollectJournalStruct{
-		PreviousEndTime:    previousEndTime,
-		CurrentTime:        time.Now(),
+		PreviousEndTime:    previousEndTime.UTC(),
+		CurrentTime:        time.Now().UTC(),
 		CollectJournalLogs: CollectJournalLogs,
-		HandleJournalLogs:  HandleJournalLogs,
+		HandleJournalLogs: func(logs string) {
+			HandleJournalLogs(logs, url)
+		},
 	}
 	lastEndTime := CollectJournalLogsAndReturnLastEndTime(collectJournalStruct)
 	err = os.WriteFile(metaInfoPath, []byte(formatTime(lastEndTime)), 0644)
@@ -76,6 +82,25 @@ func CollectJournalLogs(start time.Time, end time.Time) string {
 	return string(out)
 }
 
-func HandleJournalLogs(logs string) {
-	fmt.Printf("Logs: %v", logs)
+func HandleJournalLogs(logs string, url string) {
+	journalBody := &rest.JournalBody{
+		Logs: logs,
+	}
+	bodyJson, marshalErr := json.Marshal(journalBody)
+
+	if marshalErr != nil {
+		log.Fatal("Could not marshal metric into JSON")
+	}
+
+	// Make request with marshalled JSON as the POST body
+	response, err := http.Post(url, "application/json",
+		bytes.NewBuffer(bodyJson))
+
+	if err != nil {
+		log.Fatal("Could not make POST request")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		log.Printf("Error Response status: %v\n", response.Status)
+	}
 }

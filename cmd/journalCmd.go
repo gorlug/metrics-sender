@@ -9,7 +9,7 @@ var journalCmd = &cobra.Command{
 	Use:   "journal",
 	Short: "send journal logs",
 	Run: func(cmd *cobra.Command, args []string) {
-		metrics.SendJournalLogs(GetJournalLogMetaFile())
+		metrics.SendJournalLogs(GetJournalLogMetaFile(), GetJournalUrl())
 	},
 }
 
