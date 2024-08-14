@@ -24,18 +24,18 @@ func SendJournalLogs(metaInfoPath string, url string) {
 	if err == nil {
 		parsedTime, err := parseTime(metaInfo)
 		handleError(err)
-		previousEndTime = parsedTime
+		previousEndTime = parsedTime.In(location).Truncate(time.Minute)
 	}
 	collectJournalStruct := &CollectJournalStruct{
-		PreviousEndTime:    previousEndTime.In(location),
-		CurrentTime:        time.Now().In(location),
+		PreviousEndTime:    previousEndTime,
+		CurrentTime:        time.Now().In(location).Truncate(time.Minute),
 		CollectJournalLogs: CollectJournalLogs,
 		HandleJournalLogs: func(logs string) {
 			HandleJournalLogs(logs, url)
 		},
 	}
 	lastEndTime := CollectJournalLogsAndReturnLastEndTime(collectJournalStruct)
-	err = os.WriteFile(metaInfoPath, []byte(formatTime(lastEndTime)), 0644)
+	err = os.WriteFile(metaInfoPath, []byte(formatTime(lastEndTime.UTC())), 0644)
 }
 
 func parseTime(metaInfo []byte) (time.Time, error) {
@@ -60,10 +60,11 @@ func CollectJournalLogsAndReturnLastEndTime(values *CollectJournalStruct) time.T
 	for {
 		startTime = endTime
 		endTime = startTime.Add(time.Duration(1) * time.Minute)
+		println(fmt.Sprintf("Before check Start: %v, End: %v\n, maxEndTime: %v", startTime, endTime, maxEndTime))
 		if endTime.After(maxEndTime) {
 			break
 		}
-		fmt.Printf("Start: %v, End: %v\n", startTime, endTime)
+		println(fmt.Sprintf("Start: %v, End: %v\n, maxEndTime: %v", startTime, endTime, maxEndTime))
 		logs := values.CollectJournalLogs(startTime, endTime)
 		values.HandleJournalLogs(logs)
 	}

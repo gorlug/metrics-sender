@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestDiskMetric(t *testing.T) {
+func TestJournal(t *testing.T) {
 	location, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
 		println(fmt.Sprintf("failed to load location %v, error: %v", "Europe/Berlin", err))
