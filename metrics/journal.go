@@ -13,6 +13,12 @@ import (
 )
 
 func SendJournalLogs(metaInfoPath string, url string) {
+	location, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		println(fmt.Sprintf("failed to load location %v, error: %v", "Europe/Berlin", err))
+		location = time.Local
+	}
+
 	previousEndTime := time.Time{}
 	metaInfo, err := os.ReadFile(metaInfoPath)
 	if err == nil {
@@ -21,8 +27,8 @@ func SendJournalLogs(metaInfoPath string, url string) {
 		previousEndTime = parsedTime
 	}
 	collectJournalStruct := &CollectJournalStruct{
-		PreviousEndTime:    previousEndTime.UTC(),
-		CurrentTime:        time.Now().UTC(),
+		PreviousEndTime:    previousEndTime.In(location),
+		CurrentTime:        time.Now().In(location),
 		CollectJournalLogs: CollectJournalLogs,
 		HandleJournalLogs: func(logs string) {
 			HandleJournalLogs(logs, url)

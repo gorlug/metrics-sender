@@ -9,13 +9,19 @@ import (
 )
 
 func TestDiskMetric(t *testing.T) {
+	location, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		println(fmt.Sprintf("failed to load location %v, error: %v", "Europe/Berlin", err))
+		location = time.Local
+	}
+
 	t.Run("should collect all logs until one minute from now", func(t *testing.T) {
 		mockLogs := []string{"log1", "log2", "log3"}
 		mockJournalCollector := &MockJournalCollector{MockData: mockLogs}
 		journalLogHandler := &MockJournalLogsHandler{}
 
-		previousEnd := getTime("2024-08-12T08:19:00Z")
-		currentTime := getTime("2024-08-12T08:22:30Z")
+		previousEnd := getTime("2024-08-12T08:19:00Z", location)
+		currentTime := getTime("2024-08-12T08:22:30Z", location)
 
 		collectJournalStruct := &CollectJournalStruct{
 			PreviousEndTime:    previousEnd,
@@ -24,15 +30,15 @@ func TestDiskMetric(t *testing.T) {
 			HandleJournalLogs:  journalLogHandler.HandleJournalLogs,
 		}
 
-		expectedEndTime := getTime("2024-08-12T08:22:00Z")
+		expectedEndTime := getTime("2024-08-12T08:22:00Z", location)
 		endTime := CollectJournalLogsAndReturnLastEndTime(collectJournalStruct)
 		assert.Equal(t, 3, len(journalLogHandler.Logs))
 		assert.EqualValues(t, mockLogs, journalLogHandler.Logs)
 		mockJournalCollector.PrintStatEndTimes()
 		assert.EqualValues(t, []MockStartEndTime{
-			{Start: getTime("2024-08-12T08:19:00Z"), End: getTime("2024-08-12T08:20:00Z")},
-			{Start: getTime("2024-08-12T08:20:00Z"), End: getTime("2024-08-12T08:21:00Z")},
-			{Start: getTime("2024-08-12T08:21:00Z"), End: getTime("2024-08-12T08:22:00Z")},
+			{Start: getTime("2024-08-12T08:19:00Z", location), End: getTime("2024-08-12T08:20:00Z", location)},
+			{Start: getTime("2024-08-12T08:20:00Z", location), End: getTime("2024-08-12T08:21:00Z", location)},
+			{Start: getTime("2024-08-12T08:21:00Z", location), End: getTime("2024-08-12T08:22:00Z", location)},
 		}, mockJournalCollector.StartEndTimes)
 		assert.Equal(t, expectedEndTime, endTime)
 		assert.Equal(t, 3, len(mockJournalCollector.StartEndTimes))
@@ -44,7 +50,7 @@ func TestDiskMetric(t *testing.T) {
 		journalLogHandler := &MockJournalLogsHandler{}
 
 		previousEnd := time.Time{}
-		currentTime := getTime("2024-08-12T08:22:30Z")
+		currentTime := getTime("2024-08-12T08:22:30Z", location)
 
 		collectJournalStruct := &CollectJournalStruct{
 			PreviousEndTime:    previousEnd,
@@ -53,7 +59,7 @@ func TestDiskMetric(t *testing.T) {
 			HandleJournalLogs:  journalLogHandler.HandleJournalLogs,
 		}
 
-		expectedEndTime := getTime("2024-08-12T08:22:00Z")
+		expectedEndTime := getTime("2024-08-12T08:22:00Z", location)
 		endTime := CollectJournalLogsAndReturnLastEndTime(collectJournalStruct)
 		assert.Equal(t, 1, len(journalLogHandler.Logs))
 		assert.EqualValues(t, mockLogs, journalLogHandler.Logs)
@@ -61,15 +67,15 @@ func TestDiskMetric(t *testing.T) {
 		assert.Equal(t, expectedEndTime, endTime)
 		assert.Equal(t, 1, len(mockJournalCollector.StartEndTimes))
 		assert.EqualValues(t, []MockStartEndTime{
-			{Start: getTime("2024-08-12T08:21:00Z"), End: getTime("2024-08-12T08:22:00Z")},
+			{Start: getTime("2024-08-12T08:21:00Z", location), End: getTime("2024-08-12T08:22:00Z", location)},
 		}, mockJournalCollector.StartEndTimes)
 	})
 }
 
-func getTime(value string) time.Time {
+func getTime(value string, location *time.Location) time.Time {
 	timeObject, err := time.Parse("2006-01-02T15:04:05Z", value)
 	checkError(err)
-	return timeObject
+	return timeObject.In(location)
 }
 
 func mockGetTimeMinutesAgoOnTheFullMinute(minutes int) time.Time {
