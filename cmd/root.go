@@ -12,7 +12,7 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "metrics-sender",
 	Short: "Cli for sending metrics to the metrics-backend",
-	Long:  `Send different kinds of metrics via HTTP posts to a simple metrics backend.`,
+	Long:  `Send different kinds of metrics and Journal logs via HTTP posts to a simple metrics backend.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("executing root command")
 	},
