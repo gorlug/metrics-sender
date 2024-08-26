@@ -2,8 +2,8 @@ package metrics
 
 import (
 	"fmt"
+	"github.com/gorlug/metrics-backend/metrics"
 	"log"
-	"metrics-backend/metrics"
 	"metrics-sender/send"
 	"os/exec"
 	"strings"

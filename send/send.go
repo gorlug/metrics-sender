@@ -3,8 +3,8 @@ package send
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gorlug/metrics-backend/metrics"
 	"log"
-	"metrics-backend/metrics"
 	"net/http"
 	"os"
 	"time"
